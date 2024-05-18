@@ -64,3 +64,6 @@ public:
 private:
     std::array<INPUT, 5> machineGun;
 };
+
+
+
