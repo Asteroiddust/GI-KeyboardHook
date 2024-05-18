@@ -78,7 +78,6 @@ int main() {
     keyManager.registerKeyHandler(VK_F13, std::make_unique<Spin>());
     keyManager.registerKeyHandler(VK_F14, std::make_unique<Pick>());
     keyManager.registerKeyHandler(VK_F15, std::make_unique<Click>());
-    //keyManager.registerKeyHandler(VK_F16, std::make_unique<RandomMove>());
     keyManager.registerKeyHandler(VK_F16, std::make_unique<Spin>());
 
     // Beep to remind user that the program is initialized
