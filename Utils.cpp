@@ -5,14 +5,10 @@
 
 using namespace std::chrono_literals;
 
-void delay(size_t miliseconds) {
-    if (miliseconds >= 15) {
-        miliseconds -= 15;
-        std::this_thread::sleep_for(1ms);
-    }
+void delay(double miliseconds) {
     LARGE_INTEGER cur, target;
     QueryPerformanceCounter(&cur);
-    target.QuadPart = cur.QuadPart + miliseconds * 10000;
+    target.QuadPart = cur.QuadPart + static_cast<LONGLONG>(miliseconds * 10000);
     while (cur.QuadPart < target.QuadPart) {
         QueryPerformanceCounter(&cur);
     }

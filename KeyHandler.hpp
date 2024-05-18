@@ -57,13 +57,10 @@ private:
 };
 
 // 处理F16按键的具体策略类
-class RandomMove : public KeyHandler {
+class MachineGun : public KeyHandler {
 public:
-    RandomMove();
+    MachineGun();
     virtual void handle(int keyCode) override;
 private:
-    INPUT randomMove;
+    std::array<INPUT, 5> machineGun;
 };
-
-
-

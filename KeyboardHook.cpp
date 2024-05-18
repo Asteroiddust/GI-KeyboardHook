@@ -17,6 +17,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         switch (keyCode) {
         case VK_PAUSE:
             PostQuitMessage(0);
+            Beep(375, 300);
             break;
         case VK_UP:
             dragonSpin.update(0, -5);
@@ -58,14 +59,27 @@ int main() {
         return 1;
     }
 
+    // Minimize console window
+    ShowWindow(GetConsoleWindow(), SW_MINIMIZE);
+
+    // Set Genshin foreground
+    HWND hGenshin = FindWindow(L"UnityWndClass", NULL);
+    if (hGenshin != NULL) {
+        ShowWindow(hGenshin, SW_RESTORE);
+        SetForegroundWindow(hGenshin);
+    }
+
     // Adjust DPI awareness
     SetProcessDPIAware();
 
     // Initialize key handlers
-    keyManager.registerKeyHandler(VK_F13, std::make_unique<Spin>());
+    keyManager.registerKeyHandler(VK_F13, std::make_unique<MachineGun>());
     keyManager.registerKeyHandler(VK_F14, std::make_unique<Pick>());
     keyManager.registerKeyHandler(VK_F15, std::make_unique<Click>());
-    //keyManager.registerKeyHandler(VK_F16, std::make_unique<RandomMove>());
+    keyManager.registerKeyHandler(VK_F16, std::make_unique<Spin>());
+
+    // Beep to remind user that the program is initialized
+    Beep(750, 300);
 
     // Message loop
     MSG msg;

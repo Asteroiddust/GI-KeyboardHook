@@ -73,27 +73,48 @@ void Click::handle(int keyCode) {
 }
 
 // 定义F16按键处理策略
-RandomMove::RandomMove() {
-    randomMove.type = INPUT_MOUSE;
-    randomMove.mi.mouseData = 0;
-    randomMove.mi.dwFlags = MOUSEEVENTF_MOVE;
-    randomMove.mi.time = 0;
-    randomMove.mi.dwExtraInfo = NULL;
+MachineGun::MachineGun() {
+    machineGun.fill(INPUT());
+    machineGun[0].type = INPUT_MOUSE;
+    machineGun[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+    machineGun[1].type = INPUT_MOUSE;
+    machineGun[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+    machineGun[2].type = INPUT_KEYBOARD;
+    machineGun[2].ki.wVk = 'R';   
+    machineGun[3].type = INPUT_KEYBOARD;
+    machineGun[3].ki.wVk = 'R';
+    machineGun[3].ki.dwFlags = KEYEVENTF_KEYUP;
+    machineGun[4].type = INPUT_MOUSE;
+#ifdef _HIGH_RESOLUTION_DELAY_
+    machineGun[4].mi.dx = 80;
+    machineGun[4].mi.dy = 3;
+#else
+    defaultCursorInput.mi.dx = 150;
+#endif // _HIGH_RESOLUTION_DELAY_ 
+    machineGun[4].mi.dwFlags = MOUSEEVENTF_MOVE;
 }
 
-void RandomMove::handle(int keyCode) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::normal_distribution<> distrib(0, 50);
+void MachineGun::handle(int keyCode) {
+    auto& leftDown  = machineGun[0];
+    auto& leftUp    = machineGun[1];
+    auto& rDown     = machineGun[2];
+    auto& rUp       = machineGun[3];
+    auto& antiDrift = machineGun[4];
+    size_t cnt = 0;
     while (keyManager.getKey(keyCode)) {
-        randomMove.mi.dx = static_cast<int>(distrib(gen));
-        randomMove.mi.dy = static_cast<int>(distrib(gen));
-        SendInput(1, &randomMove, sizeof(INPUT));
-#ifdef _HIGH_RESOLUTION_DELAY_
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-#else
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-#endif // _HIGH_RESOLUTION_DELAY_
+        SendInput(1, &rDown, sizeof(INPUT));
+        delay(9.5);
+        SendInput(1, &leftDown, sizeof(INPUT));
+        SendInput(1, &rUp, sizeof(INPUT));
+        delay(9.5);
+        if (++cnt >= 5) {
+            SendInput(1, &antiDrift, sizeof(INPUT));
+        }        
+        SendInput(1, &rDown, sizeof(INPUT));
+        SendInput(1, &leftUp, sizeof(INPUT));
+        delay(9.5);
+        SendInput(1, &rUp, sizeof(INPUT));
+        delay(9.5);        
     }
 }
 
