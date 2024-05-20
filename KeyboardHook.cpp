@@ -54,28 +54,30 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 int main() {
     // Install the keyboard hook
-    HHOOK keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardProc, NULL, 0);
+    HHOOK hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardProc, NULL, 0);
 
-    if (keyboardHook == NULL) {
+    if (hKeyboardHook == NULL) {
         std::cerr << "Failed to install keyboard hook!" << std::endl;
         return 1;
     }
 
     // Minimize console window
-    ShowWindow(GetConsoleWindow(), SW_MINIMIZE);
+    HWND hConsoleWnd = GetConsoleWindow();
+    ShowWindow(hConsoleWnd, SW_MINIMIZE);
 
-    // Set Genshin foreground
-    HWND hGenshin = FindWindow(L"UnityWndClass", NULL);
-    if (hGenshin != NULL) {
-        ShowWindow(hGenshin, SW_RESTORE);
-        SetForegroundWindow(hGenshin);
+    // Set Genshin window foreground
+    HWND hGenshinWnd = FindWindow(L"UnityWndClass", NULL);
+    if (hGenshinWnd != NULL) {
+        ShowWindow(hGenshinWnd, SW_RESTORE);
+        SetForegroundWindow(hGenshinWnd);
     }
 
-    // Adjust DPI awareness
+    // Adjust process DPI awareness and priority level
     SetProcessDPIAware();
+    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 
     // Initialize key handlers
-    keyManager.registerKeyHandler(VK_F13, std::make_unique<Spin>());
+    keyManager.registerKeyHandler(VK_F13, std::make_unique<MachineGun>());
     keyManager.registerKeyHandler(VK_F14, std::make_unique<Pick>());
     keyManager.registerKeyHandler(VK_F15, std::make_unique<Click>());
     keyManager.registerKeyHandler(VK_F16, std::make_unique<Spin>());
@@ -91,7 +93,7 @@ int main() {
     }
 
     // Unhook the keyboard hook before exiting
-    UnhookWindowsHookEx(keyboardHook);
+    UnhookWindowsHookEx(hKeyboardHook);
 
     return 0;
 }

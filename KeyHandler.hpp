@@ -62,7 +62,17 @@ public:
     MachineGun();
     virtual void handle(int keyCode) override;
 private:
-    std::array<INPUT, 5> machineGun;
+    INPUT leftDown;
+    INPUT leftUp;
+    INPUT rDown;
+    INPUT rUp;
+    INPUT antiDrift;
+    
+    static constexpr INPUT createLeftDown();
+    static constexpr INPUT createLeftUp();
+    static constexpr INPUT createKeyDown();
+    static constexpr INPUT createKeyUp();
+    static constexpr INPUT createMouseMove();
 };
 
 
