@@ -73,55 +73,80 @@ void Click::handle(int keyCode) {
 }
 
 // 定义F16按键处理策略
-MachineGun::MachineGun() {
-    machineGun.fill(INPUT());
-    machineGun[0].type = INPUT_MOUSE;
-    machineGun[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-    machineGun[1].type = INPUT_MOUSE;
-    machineGun[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
-    machineGun[2].type = INPUT_KEYBOARD;
-    machineGun[2].ki.wVk = 'R';   
-    machineGun[3].type = INPUT_KEYBOARD;
-    machineGun[3].ki.wVk = 'R';
-    machineGun[3].ki.dwFlags = KEYEVENTF_KEYUP;
-    machineGun[4].type = INPUT_MOUSE;
-#ifdef _HIGH_RESOLUTION_DELAY_
-    machineGun[4].mi.dx = 80;
-    machineGun[4].mi.dy = 3;
-#else
-    defaultCursorInput.mi.dx = 150;
-#endif // _HIGH_RESOLUTION_DELAY_ 
-    machineGun[4].mi.dwFlags = MOUSEEVENTF_MOVE;
+MachineGun::MachineGun() : 
+    leftDown(createLeftDown()), 
+    leftUp(createLeftUp()), 
+    rDown(createKeyDown()), 
+    rUp(createKeyUp()), 
+    antiDrift(createMouseMove()) {}
+
+constexpr INPUT MachineGun::createLeftDown() {
+    INPUT input{};
+    input.type = INPUT_MOUSE;
+    input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+    return input;
 }
 
+constexpr INPUT MachineGun::createLeftUp() {
+    INPUT input{};
+    input.type = INPUT_MOUSE;
+    input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+    return input;
+}
+
+constexpr INPUT MachineGun::createKeyDown() {
+    INPUT input{};
+    input.type = INPUT_KEYBOARD;
+    input.ki.wVk = 'R';
+    return input;
+}
+
+constexpr INPUT MachineGun::createKeyUp() {
+    INPUT input{};
+    input.type = INPUT_KEYBOARD;
+    input.ki.wVk = 'R';
+    input.ki.dwFlags = KEYEVENTF_KEYUP;
+    return input;
+}
+
+constexpr INPUT MachineGun::createMouseMove() {
+    INPUT input{};
+    input.type = INPUT_MOUSE;
+#ifdef _HIGH_RESOLUTION_DELAY_
+    input.mi.dx = 0;
+    input.mi.dy = 3;
+#else
+    input.mi.dx = 80;
+#endif // _HIGH_RESOLUTION_DELAY_ 
+    input.mi.dwFlags = MOUSEEVENTF_MOVE;
+    return input;
+}
+
+
 void MachineGun::handle(int keyCode) {
-    auto& leftDown  = machineGun[0];
-    auto& leftUp    = machineGun[1];
-    auto& rDown     = machineGun[2];
-    auto& rUp       = machineGun[3];
-    auto& antiDrift = machineGun[4];
-    size_t cnt = 0;
     while (keyManager.getKey(keyCode)) {
         SendInput(1, &rDown, sizeof(INPUT));
-        delay(9.5);
+        delay(10);
         SendInput(1, &leftDown, sizeof(INPUT));
         SendInput(1, &rUp, sizeof(INPUT));
         delay(9.5);
-        if (++cnt >= 5) {
-            SendInput(1, &antiDrift, sizeof(INPUT));
-        }        
+        if (antiDrift.mi.dx <= 60) {
+            antiDrift.mi.dx += 5;
+        }
+        SendInput(1, &antiDrift, sizeof(INPUT));
         SendInput(1, &rDown, sizeof(INPUT));
         SendInput(1, &leftUp, sizeof(INPUT));
-        delay(9.5);
+        delay(10);
         SendInput(1, &rUp, sizeof(INPUT));
-        delay(9.5);        
+        delay(10);
     }
+    antiDrift.mi.dx = 0;
 }
 
 void KeyManager::dispatchKeyHandler(int keyCode) {
     auto handler = keyHandlers.find(keyCode);
     if (handler != keyHandlers.end()) {
-        std::thread([&, handler, keyCode]() {
+        std::thread([&]() {
             handler->second->handle(keyCode);
             }).detach();
     }
