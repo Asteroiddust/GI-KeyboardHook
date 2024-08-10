@@ -4,7 +4,9 @@
 #include <Windows.h>
 #include <memory>
 
-CursorInput dragonSpin;
+std::atomic<bool> KeyManager::keyStates[256];
+
+CursorMoveInput neuvilletteSpin;
 KeyManager keyManager;
 
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -16,15 +18,14 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     case WM_KEYDOWN: {
         switch (keyCode)
         {
-        case VK_PAUSE:
+        case VK_F12:
             PostQuitMessage(0);
-            Beep(375, 300);
             break;
         case VK_UP:
-            dragonSpin.update(0, -5);
+            neuvilletteSpin.update(0, -5);
             break;
         case VK_DOWN:
-            dragonSpin.update(0, 5);
+            neuvilletteSpin.update(0, 5);
             break;
         case VK_LEFT:
             dragonSpin.update(-10, 0);
@@ -32,20 +33,20 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         case VK_RIGHT:
             dragonSpin.update(10, 0);
             break;
-        case VK_HOME:        
+        case VK_HOME:
             dragonSpin.set_default();
             break;
-        default:        
-            if (!keyManager.getKey(keyCode)) {                
-                keyManager.setKey(keyCode, true);
+        default:
+            if (!KeyManager::getKey(keyCode)) {
+                KeyManager::setKey(keyCode, true);
                 keyManager.dispatchKeyHandler(keyCode);
-            }        
+            }
             break;
         }
     }
         break;
     case WM_KEYUP:
-        keyManager.setKey(keyCode, false);
+        KeyManager::setKey(keyCode, false);
         break;
     }
 
@@ -55,19 +56,12 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 int main() {
     // Install the keyboard hook
     HHOOK hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardProc, NULL, 0);
-
     if (hKeyboardHook == NULL) {
-        std::cerr << "Failed to install keyboard hook!" << std::endl;
-        return 1;
+        std::cerr << "Failed to install keyboard hook! (" << GetLastError() << ")" << std::endl;
+        return 3;
     }
 
-    // Minimize console window
-    HWND hConsoleWnd = GetConsoleWindow();
-    ShowWindow(hConsoleWnd, SW_MINIMIZE);
-
     // Set Genshin window foreground
-    HWND hGenshinWnd = FindWindow(L"UnityWndClass", NULL);
-    if (hGenshinWnd != NULL) {
         ShowWindow(hGenshinWnd, SW_RESTORE);
         SetForegroundWindow(hGenshinWnd);
     }
@@ -81,6 +75,7 @@ int main() {
     keyManager.registerKeyHandler(VK_F14, std::make_unique<Pick>());
     keyManager.registerKeyHandler(VK_F15, std::make_unique<Click>());
     keyManager.registerKeyHandler(VK_F16, std::make_unique<Spin>());
+    keyManager.registerKeyHandler(VK_F17, std::make_unique<HideCursor>());
 
     // Beep to remind user that the program is initialized
     Beep(750, 300);
@@ -95,5 +90,7 @@ int main() {
     // Unhook the keyboard hook before exiting
     UnhookWindowsHookEx(hKeyboardHook);
 
+    // Beep to remind user that the program is terminated
+    Beep(375, 300);
     return 0;
 }
