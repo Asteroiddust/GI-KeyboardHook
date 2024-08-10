@@ -1,53 +1,51 @@
-﻿#include "KeyHandler.hpp"
-#include "Utils.hpp"
-#include <iostream>
-#include <Windows.h>
-#include <memory>
+﻿#include "KeyManager.hpp"
+#include <functional>
+#include <minwindef.h>
+#include <unordered_map>
+#include <WinUser.h>
 
-std::atomic<bool> KeyManager::keyStates[256];
+using namespace KeyManagement;
 
-CursorMoveInput neuvilletteSpin;
-KeyManager keyManager;
+// 预先计算的常量值
+const std::unordered_map<int, std::function<void()>> keyHandlers = {
+    { VK_UP, []() { Spin::update(0, -5); } },
+    { VK_DOWN, []() { Spin::update(0, 5); } },
+    { VK_LEFT, []() { Spin::update(-10, 0); } },
+    { VK_RIGHT, []() { Spin::update(10, 0); } },
+    { VK_HOME, []() {
+        Spin::reset();
+        Utils::createBeepProcess(750, 300);
+    } }
+};
 
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode < 0)
         return CallNextHookEx(NULL, nCode, wParam, lParam);
     KBDLLHOOKSTRUCT* keyInfo = (KBDLLHOOKSTRUCT*)lParam;
     int keyCode = keyInfo->vkCode;
-    switch (wParam) {
-    case WM_KEYDOWN: {
+    switch (wParam)
+    {
+    case WM_KEYDOWN:
+        // When key is pressed
         switch (keyCode)
         {
-        case VK_F12:
+        case VK_F12:    // F12 - Exit program            
             PostQuitMessage(0);
             break;
-        case VK_UP:
-            neuvilletteSpin.update(0, -5);
-            break;
-        case VK_DOWN:
-            neuvilletteSpin.update(0, 5);
-            break;
-        case VK_LEFT:
-            dragonSpin.update(-10, 0);
-            break;
-        case VK_RIGHT:
-            dragonSpin.update(10, 0);
-            break;
-        case VK_HOME:
-            dragonSpin.set_default();
-            break;
         default:
-            if (!KeyManager::getKey(keyCode)) {
-                KeyManager::setKey(keyCode, true);
-                keyManager.dispatchKeyHandler(keyCode);
+            // 使用预先计算的常量值
+            if (auto it = keyHandlers.find(keyCode); it != keyHandlers.end()) {
+                it->second();
             }
-            break;
+            else if (!KeyManager::getKeyState(keyCode)) {
+                // Avoid retriggering
+                KeyManager::setKeyState(keyCode, true);
+                KeyManager::dispatchKey(keyCode);
         }
     }
         break;
     case WM_KEYUP:
-        KeyManager::setKey(keyCode, false);
-        break;
+        KeyManager::setKeyState(keyCode, false);
     }
 
     return CallNextHookEx(NULL, nCode, wParam, lParam);
