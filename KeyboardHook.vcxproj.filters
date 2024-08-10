@@ -15,16 +15,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Config.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyManager.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardHook.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="KeyboardHook.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Utils.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="KeyHandler.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
+    <ClCompile Include="KeyManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
